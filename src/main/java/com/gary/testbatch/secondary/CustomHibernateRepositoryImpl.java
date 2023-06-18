@@ -71,6 +71,7 @@ public class CustomHibernateRepositoryImpl<T> implements CustomHibernateReposito
     @Override
     public <S extends T> int batchInsertJdbc(List<S> entity, String className) {
 
+
 //        String sql = "INSERT INTO data (datetime, channel, value, c_district) VALUES(:datetime, :channel, :value, :cDistrict)";
         String sql = "INSERT INTO data (datetime, channel, value, c_district) VALUES(?, ?, ?, ?)";
         StatelessSession session = entityManagerFactory.unwrap(SessionFactory.class).openStatelessSession();
