@@ -1,0 +1,650 @@
+To Do:
+========================================================================================================================================
+
+- time issue in gen PR shell script
+# Ref: https://unix.stackexchange.com/questions/199879/bash-time-with-nohup
+
+- Set java memory size to 8gb on startup script
+
+- Create socket pool
+# Ref: https://blog.adamgamboa.dev/creating-a-socket-client-pool-in-java/
+# Ref: https://github.com/AdamGamboa/socket-pool
+
+- Warning message: Database has transactions
+# Ref: https://www.iteye.com/problems/55858
+# Ref: https://stackoverflow.com/questions/20244940/apparent-deadlock-creating-emergency-threads-for-unassigned-pending-tasks-using
+
+- For no PK entity, try to change to use prepare statment for bulk insert, in odrer to enable the batch mode
+Reference: https://stackoverflow.com/questions/25419488/batch-insert-using-native-sql-in-hibernate
+
+
+- Fine tune logback-spring.xml, duplicate log message problem in log file
+
+- Fine tune log, calculate the duration of whole Merge job
+
+- Target to define only one SQL to insert
+> Query[] q = MergeAcAssoRepository.class.getAnnotationsByType(Query.class);
+
+- throw exception on batchInsertForNoPK?
+
+- For CustomHibernateRepositoryImpl.prepareInsertObj, any other special character need to handle on String?
+
+- Log level should show error?
+
+- Use entityInformation on CustomHibernateRepositoryImpl.truncateTable
+# Ref: https://github.com/spring-projects/spring-data-jpa/blob/main/spring-data-jpa/src/main/java/org/springframework/data/jpa/repository/support/SimpleJpaRepository.java#L159
+# Ref: https://zhuanlan.zhihu.com/p/544814316
+
+- MergeDBService.saveMergedEnquiry >> need to handle if fileid table is empty which will cause null pointer exception?
+
+Design
+---------------------------------------------------------------------------------------------------------
+- Logging best practices
+Reference: https://stackify.com/java-logging-best-practices/
+
+- How to resume / rerun the job
+
+
+Test
+---------------------------------------------------------------------------------------------------------
+- Test: check batchInsertForNoPK is ok for saveMergedMtrA & saveMergedMtrB on MergeDBService
+- Test: Need to update table sequence after bulk insert? 
+
+
+
+TBC:
+========================================================================================================================================
+- Confirm with Edam, 1b: name, id, address, phone need to move from TUCIS?
+
+
+
+Link:
+--------------------------------------------------------------------------------------
+** PACMan setup and connect to dev server
+https://ping.transunion.com/idp/startSSO.ping?PartnerSpId=https%3A%2F%2Fpacmanhk.transunion.com%2FeEye.RetinaCSSAML%2F
+HKU4L1AP05 - Development Machine
+
+Access Rally task list: https://rally1.rallydev.com/#/675504994827d/teamplan
+
+firewall: https://192.168.220.11/
+
+TU Wiki:
+
+https://wiki.transunion.com/display/APACIT/1.+TUHK+Core+Change
+
+
+Study:
+--------------------------------------------------------------------------------------
+- Merge Data Flow
+- Existing Table Structure
+- TUEF
+
+
+Git:
+--------------------------------------------------------------------------------------
+[GIT Repo]
+
+Product Assembly
+
+https://git.transunion.com/projects/APAC/repos/intl-hk-product-assembly/browse
+
+ 
+Merge API
+
+https://git.transunion.com/projects/APAC/repos/intl-hk-merge-api/browse
+
+
+Common Lib
+
+https://git.transunion.com/projects/APAC/repos/intl-hk-merge-common-lib/browse
+
+
+Core
+
+https://git.transunion.com/projects/apac/repos/intl-hk-core/browse
+https://git.transunion.com/scm/apac/intl-hk-core.git
+
+
+Linux
+--------------------------------------------------------------------------------------
+sudo su -
+sudo su - cistest
+ps -ef | grep intl-hk-merge-api-0.0.1-SNAPSHOT.jar
+ps -ef | grep intl-hk-product-assembly-1.0.0-SNAPSHOT.jar
+chown cd-ghui /opt/hk/bin/mergeapi/dev/intl-hk-merge-api-0.0.1-SNAPSHOT.jar
+chown cd-ghui /opt/hk/bin/mergeapi/dev/intl-hk-product-assembly-1.0.0-SNAPSHOT.jar
+--------------------------------------------------
+> Deploy and restart server
+# sudo su - cistest
+# cd /opt/hk/bin/mergeapi/dev
+# ./stop.sh
+ps -ef | grep intl-hk-merge-api-0.0.1-SNAPSHOT.jar
+remove / rename intl-hk-merge-api-0.0.1-SNAPSHOT.jar
+deploy intl-hk-merge-api-0.0.1-SNAPSHOT.jar by winSCP
+# ./startup.sh
+
+--------------------------------------------------
+> Deploy and restart server
+# sudo su - cistest
+# cd /opt/hk/bin/productassembly/dev
+# ./stop.sh
+ps -ef | grep intl-hk-product-assembly-1.0.0-SNAPSHOT.jar
+remove / rename intl-hk-product-assembly-1.0.0-SNAPSHOT.jar
+deploy intl-hk-product-assembly-1.0.0-SNAPSHOT.jar by winSCP
+# ./startup.sh
+--------------------------------------------------
+sudo su -
+cd /opt/hk/bin/productassembly/dev/scripts/sr007
+rm -rf score_ph_01 score_ph_02 exec.log nohup.out
+
+vi ~/.bash_profile
+source ~/.bash_profile
+
+
+
+
+Project path
+--------------------------------------------------------------------------------------
+config:
+/opt/hk/config/mergeapi/dev
+/opt/hk/config/productassembly/dev
+
+bin:
+/opt/hk/bin/mergeapi/dev
+/opt/hk/bin/productassembly/dev
+
+log:
+/opt/hk/logs/mergeapi/dev
+/opt/hk/logs/productassembly/dev
+
+
+
+Connect server via Winscp and PACMan
+--------------------------------------------------------------------------------------
+Winscp setting:
+> File protocol: SCP
+> Host name: pacmanhk.transunion.com
+> Port number: 4422
+> User name :
+# Login to PACMan
+# Choose Server and click "OneClick launch" icon
+# Click "Open SSH Session"
+# Copy "Username/IP" and paste to Winscp "User name"
+
+
+
+DB:
+--------------------------------------------------------------------------------------
+10.105.22.219
+cis_system = TUHK
+dev3_system = TUCIS
+dev4_system = Merge DB
+
+
+-----------------------------------------
+add new fields depends on xx_serial
+
+1A logic:
+TUHK include MCRA + non-MCRA member data
+TUCIS only MCRA member data
+
+TUCIS table will have more fields
+
+match logic
+
+account vs account_cycle (1 to many)
+
+Merge DB save logic:
+1A: TUCIS + merge API
+1B: merge API
+Keep CIS: only TUCIS
+
+Transaction control:
+
+1. cleanup DB
+2. Copy TUCIS data
+3. Each FID
+----------------------------------------------------
+<Issue of Save large data set to DB>
+
+# Bulk Insert (大量 Insert) 的三種技術
+https://www.tpisoftware.com/tpu/articleDetails/2674
+# BATCH PROCESSING IN HIBERNATE – JAVA’S ORM
+https://simple-task.com/news/batch-processing-hibernate-javas-orm/
+# How to do bulk (multi row) inserts with JpaRepository?
+https://stackoverflow.com/questions/50772230/how-to-do-bulk-multi-row-inserts-with-jparepository
+# Spring Boot: Boost JPA Bulk Insert Performance by 100x.
+https://amrutprabhu.medium.com/spring-boot-jpa-bulk-insert-performance-by-100-times-14ec10fa682b
+# Batch insert using Native SQL in Hibernate (*** Use prepare statement ***)
+https://stackoverflow.com/questions/25419488/batch-insert-using-native-sql-in-hibernate
+
+
+<Informix setting>
+
+# Informix environment variables with the HCL Informix JDBC Driver
+https://informix.hcldoc.com/12.10/help/index.jsp?topic=%2Fcom.ibm.jdbc.doc%2Fids_jdbc_039.htm
+
+https://informix.hcldoc.com/12.10/help/index.jsp?topic=%2Fcom.ibm.jdbc.doc%2Fids_jdbc_281.htm&anchor=ids_jdbc_281
+
+
+<Test Report>
+10000 acccount records with no IDENTIFY & no SQL log
+Duration in second: 10 
+
+100000 account records with no IDENTIFY & no SQL log
+Duration in second: 111
+
+-----
+
+latest eclipse
+
+use postgre
+-> database explorer
+-> New -> JPA project
+-> Generate Custom Entities
+
+----------------
+[Convert db field name to java properties]
+
+1. Execute java program:
+
+-----------
+package model;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+public class ConvertDbString {
+
+	public static void main(String[] args) {
+		String s = "fid, subscriber_kob, subscriber_code, subscriber_status, operator_kob, operator_code, enq_control_num, date_stamp, time_stamp, user_reference, billing_code, bus_cat, cond_chk_type, new_subj_ind, indiv_corp, enquiry_purp, enquiry_amt, currency_code, enquiry_size, enquiry_1, enquiry_2, enquiry_3, enquiry_4, enquiry_5, enquiry_6, enquiry_7, enquiry_8, enquiry_9, subjs_qualified, subjs_scored, subjs_merged, addr_ret_cnt, acct_ret_cnt, enqr_ret_cnt, wtch_ret_cnt, safe_ret_cnt, relt_ret_cnt, alis_ret_cnt, open_acct_cnt, clsd_acct_cnt, new_acct_cnt, dlq_acct_cnt, mtch_writ_cnt, unmt_writ_cnt, unmt_pttn_cnt, mtch_pttn_cnt, mtch_writ_fid_1, mtch_writ_fid_2, mtch_writ_fid_3, mtch_writ_fid_4, unmt_writ_fid_1, unmt_writ_fid_2, unmt_writ_fid_3, unmt_writ_fid_4, mtch_pttn_fid_1, mtch_pttn_fid_2, mtch_pttn_fid_3, mtch_pttn_fid_4, unmt_pttn_fid_1, unmt_pttn_fid_2, unmt_pttn_fid_3, unmt_pttn_fid_4, name_upd_cnt, addr_upd_cnt, addr_add_cnt, str_addr_rtn_cnt, pm_status, tuhk_fid, tuhk_enq_control_num";
+		Pattern p = Pattern.compile( "_([a-zA-Z])" );
+		Matcher m = p.matcher( s );
+		StringBuffer sb = new StringBuffer();
+		while (m.find()) {
+		    m.appendReplacement(sb, m.group(1).toUpperCase());
+		}
+		m.appendTail(sb);
+
+		System.out.println(sb.toString()); // loadId,policyId,policyNumber
+
+	}
+
+}
+--------------------
+2. Replace ", " with ", :#{#mtrA."
+3. Replace "," with "},"
+-----------------------
+1. <run1st>
+- Checking: $LOGNAME = cis$LVL
+- Environment variables:
+export CISDB="dev4_system"
+export BATHOME="/opt/hk/bin/productassembly/dev/scripts"
+
+- line 33:
+	nohup time exec.ksh ${OBSDT} &
+
+2. <exec.ksh>
+- line 86:
+export TUPERLLIBPATH='use lib "/cissystem/lib"; use lib "/cissystem/tst_env/lib"; use lib "/local/cissystem/lib"; use lib "/local/cissystem/tst_env/lib";'
+export MAX_QUEUE=`perl -e "${TUPERLLIBPATH} use Common; %queue=read_config('QUEUE'); printf('%d', \\$queue{'TUEF_Q'});"`
+
+- line 109 & 142: 
+change "cis_system" to "${CISDB}"
+
+3. <run_bat.ksh>
+- No change
+
+4. <exec_batch.ksh>
+- No change
+
+5. Tables used in PR script(Cms_function.pm) but not in Merge DB:
+
+pr_asso
+writ
+alias
+petition
+notice
+discharge
+discharge_alias
+
+
+6. How to verify the result?
+
+7. Deployment:
+- execute user account
+- batch file location
+- Only deploy used files? (total 5 files)
+
+8. Program for masking
+
+------------------
+cd cisprod
+
+/opt/cis/sim/crs
+vi view_setv
+
+vi .bash_profile
+
+
+--------
+
+vi /home/cd-ghui/.bash_profile
+
+cd ~/intl-hk-core/tucrs/code/
+
+cat /opt/IBM/informix/etc/sqlhosts
+printenv | grep icrs_dev1
+
+-----------
+sudo su - cd-pchan
+whereis mask
+printenv | grep DBINFO
+printenv | grep INFORMIXSERVER
+printenv | grep BATHOME
+printenv | grep 'BATHOME\|DBINFO\|INFORMIXSERVER'
+cat /opt/IBM/informix/etc/sqlhosts
+cat ~/.bash_profile
+vi ~/.bash_profile
+source ~/.bash_profile
+
+cat /home/cd-ghui/intl-hk-core/tucrs/code/scripts/etc/HKU4L1AP05-test+ifx.cfg
+cat /home/cd-ghui/intl-hk-core/tucrs/code/scripts/etc/db/HKU4L1AP05-test.db
+# path of mask 
+/home/cd-ghui/intl-hk-core/tucrs/code/bin/
+
+cat /home/cd-ghui/intl-hk-core/tucrs/code/bin/mask.log
+
+grep cd-ghui /etc/services
+netstat -an | grep 50136
+
+#core log file path
+cd /home/cd-ghui/intl-hk-core/tucrs/code/log/h2htp
+
+TuefClient localhost 50136 /home/cd-ghui/test_TUDF_flow/test-po.tuef
+TuefClient localhost 50133 /home/cd-pchan/test_TUDF_flow/test-po.tuef
+
+mask -pn 2>&1 > prg_name.log    & 
+
+h2htpstart
+h2htpstop
+h2htpstat
+-----------
+
+HKU4L1AP05
+10.105.22.220
+
+cisprd
+--------------
+Finished works:
+
+- Study
+- copy TUCIS data to merge db
+- performance tunning
+- shell script
+
+Faced problems:
+
+- No reference server
+- make sure pointing to the correct db
+- Missing tables in merge DB but need to use in script, need to copy data to merge db too:
+pr_asso
+writ
+alias
+petition
+notice
+discharge
+discharge_alias
+
+
+batch
+cissystem/batch
+
+------------------------------------------
+name table
+
+
+pa_type = A (member data)
+pa_type = P (public record)
+
+partition
+writ
+pr_asso
+subject
+name
+address
+
+
+pa_type 'A' data copy to name
+
+1. public record:
+name
+address
+
+2. run enquiry in core service
+name
+id
+address
+
+CISDB -> DBINFO
+
+if [ $LOGNAME != cis$LVL ]
+
+- sync the script to core program
+- 
+
+
+
+
+
+
+
+================================================
+
+TODO:
+
+Seat registration in iOffice
+Registration for Dependents in Medical Scheme
+Printer setup
+Locker setup
+
+
+TBC:
+
+How to connect VPN << wait for about a week
+What is the login id/password of git?
+
+Locker:
+E36
+
+
+Link:
+
+Project software share
+\\hko3w9ap10\DevShare
+
+Cap select: win + shift + s
+
+
+PCCW
+$126
+$400 welcome coupon
+30 months
+$400 the club points can use to reduce 
+
+29469264 choi
+
+
+Hi Walter, I am sorry to inform you that I would like to resign from my job, can we have a chat today for this?
+
+
+Hi Clara, I am sorry to inform you that I have resigned from my job with Walter this morning.
+
+
+Hi Sheron, I have resigned from my job with Walter this morning, can I confirm my last day should be 24/7?
+
+[2:07 PM] Hui, Gary
+
+Can I confirm my last day should be 24/7?
+
+
+Dear Walter,
+
+I would like to inform that I am tendering my resignation from my role as senior developer at Transunion. My last day will be on 23/07/2023, 14 days from today.
+
+If I can be of any assistance in this transition period, please let me know. I wish you and everyone at Transunion all the best.
+
+Sincerely,
+Gary Hui
+-----
+hello everyone, I am Gary, the new senior developer of the application team, 
+I just finished the task to study the workflow of Merge data project, and also completed the environment setup
+Now I will go on the next task to save merge data into database, and that is all my update, thank you
+
+Good afternoon, now I'm working on the task of saving merge data into database, 
+and I will focus on the implementation part to save TUCIS data into merge database first
+that is all my update, thank you
+
+Good afternoon, I'm still working on the task of saving TUCIS data into merge database, 
+and I don't have much update on it, thank you
+
+Good afternoon, I'm still working on the task of saving merge data, 
+yesterday I have resolved the performance issue on bulk insert data
+Today I will focus on the implementation part
+that is all my update, thank you
+
+
+I have one outstanding task of saving merge data to database,
+I think it cannot be done today due to some technique issue
+This item will need to move to next sprint
+that is all my update, thank you
+
+Good afternoon, yesterday I'm working on the task of saving data into merge database, 
+today I will still working on it.
+that is all my update, thank you
+
+Hello, I'm still working on the task of saving data into database, 
+The implementation part is almost finish, I think I can complete it today.
+Next step I will verify that the data is inserted correctly to database,
+and target to complete tomorrow
+that is all my update, thank you
+
+Hello Swati, yesterday I have completed the implementation part of saving data into database, 
+today I am working on verify the data is inserted correctly, and I think I can complete it today.
+next I will work on the new task to make a new endpoint of checking merging status.
+that is all my update, thank you
+
+Hello Swati, yesterday I have completed the task of saving data into database,
+today I am working on some bug fixing and server deployment to prepare the coming QA test
+next I will work on the new task to make a new endpoint of checking merging status.
+that is all my update, thank you
+
+Hello Swati, I have just completed some bug fixing for the merge program.
+Next I will handle another issue to fix a connection error with the core service, 
+and target to finish this afternoon
+that is all my update, thank you
+
+Hello Swati, I just completed the task to make a new endpoint for checking merging status.
+Next I will work on a shell script for generate public record and masking.
+that is all my update, thank you
+
+Hello Clayton, I am now working on a shell script for generate public record and masking.
+and I don't have much update on it, thank you.
+
+
+Hello Swati, 
+I am currently working on the merge data project, and Po have just demonstrated it, I will not repeat.
+In this sprint, I have completed the task of saving TUCIS data into merge database.
+Since the database involves large amount of data, I spent a lot of time to troubleshoot the performance issues.
+Besides, I created a new endpoint for checking the merging status and allow the merge process to run on backend,
+to avoid freeze on the calling screen.
+Now I am working on the shell script for generate public record
+
+Hello Swati, 
+I am currently working on the shell script for generate public record,
+I think it cannot be done today as it is much complicated than expect.
+This item will need to move to next sprint
+For the task of generate score, it also need to move to next sprint because I have not start yet.
+that is all my update, thank you
+
+
+Hello Swati, 
+I am still working on the shell script for generate public record.
+and I don't have much update on it, thank you.
+
+Hello Swati,
+I am currently working on the shell script for generate public record,
+After discussed with team on this morning, I think some adjustment is need, 
+and also need to validate the output result.
+Meanwhile, I'm also working on another shell script for masking database records.
+that is all my update, thank you
+
+Hello Swati,
+I am currently working on the shell script for generate public record and masking database
+For the script of masking database, 
+we just discussed with the infrastructure team and need more time to further study on it
+that is all my update, thank you
+
+Hello Swati,
+I am currently working on the shell script for masking database.
+In order to run the shell script on the server, 
+First I have to setup a core program in my user account.
+so I will do this first today.
+that is all my update, thank you
+
+Hello Swati,
+Yesterday I have setup the core program in my user account.
+Today I continue to work on the shell script for masking database.
+that is all my update, thank you
+
+Hello Swati,
+I am still working on the shell script for generate public record.
+and this afternoon I will prepare some test data for it.
+that is all my update, thank you
+
+Hello Swati,
+I am still working on the shell script for generate public record.
+and preparing some test data for the unit test.
+that is my update, thank you
+
+Hello Swati,
+Yesterday I was working on the shell script for generate public record and masking.
+I think the tasks still take time to finish and cannot be done in this sprint.
+Now I am preparing a wiki page to write down the task details, 
+and will have a knowledge transfer section with Edam and PO later to handover my task
+that is my update, thank you
+
+Hello Swati,
+I am currently preparing a wiki page to write down my task details for the knowledge transfer section, 
+Meanwhile I also start to handover my task to PO.
+For those tasks assigned to me, I think need to move to next sprint
+that is my update, thank you
+
+This sprint I mainly working on the shell script for generate public record and masking, 
+Those tasks are still work in progress so I have nothing to demo yet.
+I think thats all, thank you
+
+
+Hello Swati,
+I am currently preparing a wiki page to write down my task details for the knowledge transfer section, 
+Meanwhile I also start to handover my task to PO.
+For those tasks assigned to me, I think need to move to next sprint
+that is my update, thank you
+
+The original expection is that we dont need to modify the script but just use it.
+So we think two days is enough for the setup.
+But infact we spent a lot of time to study and configuring the script to make it work, 
+Thats why the task is under estimate and still work in progress.
+
+
+Hello Swati,
+I am currently working on the wiki page for the knowledge transfer, 
+Meanwhile I also start to handover my task to PO.
+that is my update, thank you
+
+
+Hello Swati,
+Yesterday I have completed the knowledge transfer section to Edam and PO.
+Next I will work on the shell script task with PO in the remaining of two days, 
+and keep updating the wiki page if necessary.
+that is my update, thank you
