@@ -1,0 +1,35 @@
+@startuml
+autonumber  1
+actor       User                    as U1     #red
+participant "Product\nAssembly"     as P
+participant "Core\nService"         as C
+participant "MergeAPI"              as M
+database    "Informix\n(TUHK)"      as D1  
+database    "Informix\n(TUCIS)"     as D2
+database    "Informix\n(MergeDB)"   as D3
+
+U1->P: Trigger merge data process
+P->D3: <font color=red>Cleanup MergeDB data</font>
+P->D2: Retrieve "Name" and "ID" list
+P->D2: Retrieve Subscribed Member list
+group Copy TUCIS data to MergeDB
+P->D2: <font color=red>Retrieve Merging Strategy(1A & 1B) related table data</font>
+P->D3: <font color=red>Copy data from Informix(TUCIS) to Informix(MergeDB)</font>
+end
+loop each "Name" & "ID" record
+P->P: Prepare TUEF message by Name and ID record\n<font size="10">  - Product Request Code: 30(unmasked data) or 31 (masked data)</font>
+P->C: Send TUEF message
+C->D1: Retrieve subject data
+C->C: Prepare subject data in JSON format
+C-->P: Send back subject data response
+P->D2: Retrieve TUCIS data by subject
+P->P: Prepare request message in JSON format together with\n TUHK data, TUCIS data (FID related) & Subscribed Member list
+P->M: Send request message
+M->M: Prepare merging result response message by going through different matching strategy
+M-->P: Send merging result response message
+  loop each merging result
+  P->D3: <font color=red>Merge result into MergeDB</font>
+  end
+end
+
+@enduml
